@@ -161,7 +161,7 @@ function DestinationCards({ destinations, onSelect }: { destinations: Destinatio
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
             <div className="card p-6">
               <h3 className="font-display text-lg font-bold mb-1">Enter your own destination</h3>
-              <p className="text-sm text-gray-500 mb-5">Type any place in India — city, region, or landmark — and we'll build a full itinerary for it.</p>
+              <p className="text-sm text-gray-500 mb-5">Type any place in India — city, region, or landmark — and we&apos;ll build a full itinerary for it.</p>
               <div className="relative mb-4">
                 <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
