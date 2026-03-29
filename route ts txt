@@ -1,0 +1,121 @@
+// import { NextRequest, NextResponse } from 'next/server';
+// import Groq from 'groq-sdk';
+// import type { GenerateItineraryRequest, GeneratedItinerary } from '@/types';
+
+// const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+// const PURPOSE_TONE: Record<string, string> = {
+//   spiritual:      'Use calm, reflective, reverent language. Mention early morning timings, silence, sacred spaces, dharamshalas. Avoid loud or crowded recommendations.',
+//   honeymoon:      'Use romantic, intimate language. Mention sunset spots, private experiences, special moments. Suggest candlelit dinners and cosy stays.',
+//   adventure:      'Use energetic, bold language. Mention physical challenges, heights, rivers, trails. Prioritise outdoor experiences and local adrenaline spots.',
+//   weekend_escape: 'Use relaxed, restorative language. Prioritise rest, nature, slow mornings. Avoid exhausting schedules — quality over quantity.',
+// };
+
+// const SYSTEM_PROMPT = `You are an expert Indian travel planner who specialises in creating deeply personalised, off-the-beaten-path itineraries for independent travellers. You know India's hidden gems intimately.
+
+// STRICT RULES:
+// 1. Respond ONLY with valid JSON. No preamble, no markdown, no explanation.
+// 2. Every day must have morning, afternoon, evening slots plus 1 hidden gem.
+// 3. Hidden gems must be genuinely low-traffic, interesting spots — not mainstream tourist places.
+// 4. Waypoints must have realistic lat/lng coordinates for the destination region.
+// 5. Budget figures must be in Indian Rupees (INR) and be realistic for the budget tier.
+// 6. All activities must be physically achievable within the time window.`;
+
+// function buildPrompt(req: GenerateItineraryRequest): string {
+//   const tone = PURPOSE_TONE[req.purpose] || '';
+//   return `Create a ${req.days}-day travel itinerary for the following traveller:
+
+// Destination: ${req.destination}
+// Purpose: ${req.purpose} (${tone})
+// Budget tier: ${req.budget_tier} (budget=1200 INR/day, mid=3000 INR/day, premium=7000 INR/day per person)
+// Travel mode: ${req.travel_mode}
+// Traveller type: ${req.traveler_type}
+// Departing from: ${req.departure_city}
+// Personality: ${req.personality}
+
+// Return ONLY this JSON structure (no other text):
+// {
+//   "personality": "${req.personality}",
+//   "destination": "${req.destination}",
+//   "days": [
+//     {
+//       "day": 1,
+//       "title": "Descriptive day title",
+//       "morning":   { "activity": "", "location": "", "duration_minutes": 90,  "why_it_fits": "", "best_time": "Early morning", "distance_km": 0 },
+//       "afternoon": { "activity": "", "location": "", "duration_minutes": 120, "why_it_fits": "", "best_time": "Daytime",       "distance_km": 5 },
+//       "evening":   { "activity": "", "location": "", "duration_minutes": 90,  "why_it_fits": "", "best_time": "Sunset",        "distance_km": 3 },
+//       "hidden_gem": { "name": "", "description": "", "distance_km": 8, "best_time": "Morning", "lat": 0.0, "lng": 0.0 },
+//       "food": { "name": "", "cuisine": "", "price_range": "80-200 INR" },
+//       "estimated_cost_inr": 1200
+//     }
+//   ],
+//   "budget": {
+//     "transport": 0, "stay": 0, "food": 0, "activities": 0,
+//     "buffer": 0, "total": 0, "is_over_budget": false, "stated_budget_inr": 0
+//   },
+//   "waypoints": [
+//     { "day": 1, "name": "", "lat": 0.0, "lng": 0.0, "is_gem": false }
+//   ],
+//   "weather_note": "Brief weather tip for this destination and time of year",
+//   "safety_note": ""
+// }`;
+// }
+
+// function fallbackItinerary(req: GenerateItineraryRequest): GeneratedItinerary {
+//   const days = Array.from({ length: req.days }, (_, i) => ({
+//     day: i + 1,
+//     title: `Day ${i + 1} in ${req.destination}`,
+//     morning:    { activity: 'Explore the local area',          location: req.destination, duration_minutes: 120, why_it_fits: 'Great for your travel style',  best_time: 'Early morning', distance_km: 0 },
+//     afternoon:  { activity: 'Visit local markets and eateries',location: req.destination, duration_minutes: 120, why_it_fits: 'Authentic local experience',    best_time: 'Daytime',       distance_km: 2 },
+//     evening:    { activity: 'Sunset walk and dinner',          location: req.destination, duration_minutes: 90,  why_it_fits: 'Perfect way to wind down',     best_time: 'Sunset',        distance_km: 1 },
+//     hidden_gem: { name: 'Local Secret Spot', description: 'Ask locals for the best viewpoint — every Indian town has one most tourists never find.', distance_km: 5, best_time: 'Morning', lat: 0, lng: 0 },
+//     food:       { name: 'Local dhaba', cuisine: 'Regional Indian', price_range: '80-200 INR' },
+//     estimated_cost_inr: 1200,
+//   }));
+//   return {
+//     personality: req.personality,
+//     destination: req.destination,
+//     days,
+//     budget: { transport: 800, stay: req.days * 600, food: req.days * 300, activities: 200, buffer: 190, total: req.days * 1200, is_over_budget: false, stated_budget_inr: req.days * 1200 },
+//     waypoints: [{ day: 1, name: req.destination, lat: 20.5937, lng: 78.9629, is_gem: false }],
+//     weather_note: 'Check local weather before your trip.',
+//     safety_note: '',
+//   };
+// }
+
+// export async function POST(request: NextRequest) {
+//   try {
+//     const body: GenerateItineraryRequest = await request.json();
+
+//     if (!body.destination || !body.purpose || !body.days) {
+//       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+//     }
+
+//     const prompt = buildPrompt(body);
+//     let itinerary: GeneratedItinerary;
+
+//     try {
+//       const completion = await groq.chat.completions.create({
+//         model: 'llama-3.3-70b-versatile',
+//         max_tokens: 4096,
+//         temperature: 0.7,
+//         messages: [
+//           { role: 'system', content: SYSTEM_PROMPT },
+//           { role: 'user',   content: prompt },
+//         ],
+//       });
+
+//       const raw = completion.choices[0].message.content ?? '';
+//       const cleaned = raw.replace(/```json\n?|```\n?/g, '').trim();
+//       itinerary = JSON.parse(cleaned);
+//     } catch (aiError) {
+//       console.error('Groq API error, using fallback:', aiError);
+//       itinerary = fallbackItinerary(body);
+//     }
+
+//     return NextResponse.json(itinerary);
+//   } catch (error) {
+//     console.error('Generate itinerary error:', error);
+//     return NextResponse.json({ error: 'Failed to generate itinerary' }, { status: 500 });
+//   }
+// }
