@@ -47,6 +47,7 @@ interface TravelStore {
   toggleMap:       () => void;
   toggleBudget:    () => void;
   resetQuiz:       () => void;
+  clearPersistedState: () => void;
   saveRecentTrip:  (trip: SavedTrip) => void;
   loadRecentTrip:  (trip: SavedTrip) => void;
   deleteRecentTrip:(id: string) => void;
@@ -73,7 +74,7 @@ export const useTravelStore = create<TravelStore>()(
       setQuizAnswer:   (key, value)  => set(s => ({ quizAnswers: { ...s.quizAnswers, [key]: value } })),
       setPersonality:  (personality) => set({ personality }),
       setDestinations: (destinations)=> set({ destinations }),
-      selectDest:      (selectedDest)=> set({ selectedDest }),
+      selectDest:      (selectedDest)=> set({ selectedDest, itinerary: null, isGenerating: false }),
       setSavedId:      (savedId, shareToken) => set({ savedId, shareToken }),
       setGenerating:   (isGenerating)=> set({ isGenerating }),
       setActiveDay:    (activeDay)   => set({ activeDay }),
@@ -120,7 +121,23 @@ export const useTravelStore = create<TravelStore>()(
       resetQuiz: () => set({
         quizStep: 0, quizAnswers: {}, personality: null,
         destinations: [], selectedDest: null, itinerary: null,
+        savedId: null, shareToken: null, isGenerating: false,
+        activeDay: 0, showMap: false, showBudget: false,
       }),
+
+      clearPersistedState: () => {
+        // Clear localStorage for this store
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('tripmind-store');
+        }
+        set({
+          quizStep: 0, quizAnswers: {}, personality: null,
+          destinations: [], selectedDest: null, itinerary: null,
+          savedId: null, shareToken: null, isGenerating: false,
+          activeDay: 0, showMap: false, showBudget: false,
+          recentTrips: [],
+        });
+      },
     }),
     {
       name:    'tripmind-store',
