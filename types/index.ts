@@ -34,6 +34,9 @@ export interface TimeSlot {
   why_it_fits:      string;
   best_time:        string; // "Early morning" | "Daytime" | "Sunset" | "Night"
   distance_km:      number;
+  beginner_tip?:    string;
+  cultural_note?:   string;
+  safety_reminder?: string;
 }
 
 export interface HiddenGem {
@@ -91,6 +94,13 @@ export interface GeneratedItinerary {
   weather_note?: string;
   safety_note?:  string;
   feasibility_warning?: string; // Added field to handle logic check warnings
+  beginner_essentials?: {
+    packing_list: string[];
+    emergency_contacts: string[];
+    cultural_tips: string[];
+    travel_logistics: string;
+    return_journey: string;
+  };
 }
 
 // ── Destination Discovery ──────────────────────────────────────────────────
